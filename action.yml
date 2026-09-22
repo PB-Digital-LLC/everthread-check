@@ -1,14 +1,28 @@
 name: 'EverThread site check'
 description: 'Run a free, plain-English security check of a website after you deploy, and comment the report card on the pull request.'
 author: 'EverThread'
-branding: { icon: 'shield', color: 'orange' }
+branding:
+  icon: 'shield'
+  color: 'orange'
 inputs:
-  url: { description: 'The site to check, e.g. yourbakery.com or a preview URL', required: true }
-  fail-on: { description: 'Fail the step at this verdict or worse: urgent, attention, or none', required: false, default: 'urgent' }
-  comment: { description: 'Comment the report card on the pull request (needs pull-requests: write)', required: false, default: 'true' }
+  url:
+    description: 'The site to check, e.g. yourbakery.com or a preview URL'
+    required: true
+  fail-on:
+    description: 'Fail the step at this verdict or worse: urgent, attention, or none'
+    required: false
+    default: 'urgent'
+  comment:
+    description: 'Comment the report card on the pull request (needs pull-requests: write)'
+    required: false
+    default: 'true'
 outputs:
-  verdict: { description: 'clean, attention, urgent, or blocked', value: ${{ steps.check.outputs.verdict }} }
-  headline: { description: 'One-line summary', value: ${{ steps.check.outputs.headline }} }
+  verdict:
+    description: 'clean, attention, urgent, or blocked'
+    value: ${{ steps.check.outputs.verdict }}
+  headline:
+    description: 'One-line summary'
+    value: ${{ steps.check.outputs.headline }}
 runs:
   using: 'composite'
   steps:
