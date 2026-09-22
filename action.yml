@@ -1,0 +1,40 @@
+name: 'EverThread site check'
+description: 'Run a free, plain-English security check of a website after you deploy, and comment the report card on the pull request.'
+author: 'EverThread'
+branding: { icon: 'shield', color: 'orange' }
+inputs:
+  url: { description: 'The site to check, e.g. yourbakery.com or a preview URL', required: true }
+  fail-on: { description: 'Fail the step at this verdict or worse: urgent, attention, or none', required: false, default: 'urgent' }
+  comment: { description: 'Comment the report card on the pull request (needs pull-requests: write)', required: false, default: 'true' }
+outputs:
+  verdict: { description: 'clean, attention, urgent, or blocked', value: ${{ steps.check.outputs.verdict }} }
+  headline: { description: 'One-line summary', value: ${{ steps.check.outputs.headline }} }
+runs:
+  using: 'composite'
+  steps:
+    - id: check
+      shell: bash
+      run: |
+        set +e
+        npx -y everthread check "${{ inputs.url }}" --json > report.json
+        code=$?
+        if [ $code -ne 0 ] && [ ! -s report.json ]; then echo "EverThread could not be reached"; exit 2; fi
+        node -e '
+          const r = JSON.parse(require("fs").readFileSync("report.json","utf8"));
+          const out = require("fs").createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
+          out.write(`verdict=${r.verdict||""}\nheadline=${(r.headline||r.error||"").replace(/\n/g," ")}\n`);
+          const badge = { clean: "✅ Looks good", attention: "🟡 Worth a look", urgent: "🔴 Needs attention", blocked: "⚪ Could not check" }[r.verdict] || "";
+          let md = `### EverThread · ${r.host||"${{ inputs.url }}"}\n**${badge}** — ${r.headline||r.error||""}\n\n`;
+          for (const i of (r.items||[])) md += `**${i.urgencyLabel}** · ${i.title}\n${i.what}\n_Fix:_ ${i.fix}${i.learnMore ? ` · [more](${i.learnMore})` : ""}\n\n`;
+          if (r.next && r.next.watch) md += `[Watch this site every day, free](${r.next.watch})\n`;
+          require("fs").writeFileSync("report.md", md);
+        '
+        cat report.md >> "$GITHUB_STEP_SUMMARY"
+        npx -y everthread check "${{ inputs.url }}" ${{ inputs.fail-on != 'none' && format('--fail-on {0}', inputs.fail-on) || '' }} > /dev/null
+        exit $?
+    - if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' && always() }}
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const body = require('fs').readFileSync('report.md', 'utf8');
+          await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body });
