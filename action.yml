@@ -40,7 +40,7 @@ runs:
           const badge = { clean: "✅ Looks good", attention: "🟡 Worth a look", urgent: "🔴 Needs attention", blocked: "⚪ Could not check" }[r.verdict] || "";
           let md = `### EverThread · ${r.host||"${{ inputs.url }}"}\n**${badge}** — ${r.headline||r.error||""}\n\n`;
           for (const i of (r.items||[])) md += `**${i.urgencyLabel}** · ${i.title}\n${i.what}\n_Fix:_ ${i.fix}${i.learnMore ? ` · [more](${i.learnMore})` : ""}\n\n`;
-          if (r.next && r.next.watch) md += `[Watch this site every day, free](${r.next.watch})\n`;
+          if (r.nudge) md += `> ${r.nudge}\n`; else if (r.next && r.next.watch) md += `[Watch this site every day, free](${r.next.watch})\n`;
           require("fs").writeFileSync("report.md", md);
         '
         cat report.md >> "$GITHUB_STEP_SUMMARY"
