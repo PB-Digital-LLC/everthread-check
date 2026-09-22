@@ -1,0 +1,16 @@
+name: self-test
+on:
+  push: { branches: [main] }
+  workflow_dispatch: {}
+permissions: { contents: read }
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - id: et
+        uses: ./
+        with: { url: everthread.live, fail-on: urgent, comment: 'false' }
+      - run: echo "verdict=${{ steps.et.outputs.verdict }} · ${{ steps.et.outputs.headline }}"
