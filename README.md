@@ -3,7 +3,7 @@
 Runs EverThread's free, plain-English security check against a site after you deploy, writes the report card to the job summary, and comments it on the pull request.
 
 ```yaml
-- uses: everthread/check@v1
+- uses: PB-Digital-LLC/everthread-check@v1
   with:
     url: https://preview-${{ github.event.number }}.yourhost.app   # or yourbakery.com
     fail-on: urgent          # urgent | attention | none
