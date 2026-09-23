@@ -28,9 +28,11 @@ runs:
   steps:
     - id: check
       shell: bash
+      env:
+        EVERTHREAD_SOURCE: github-action
       run: |
         set +e
-        npx -y everthread check "${{ inputs.url }}" --json > report.json
+        npx -y everthread@latest check "${{ inputs.url }}" --json > report.json
         code=$?
         if [ $code -ne 0 ] && [ ! -s report.json ]; then echo "EverThread could not be reached"; exit 2; fi
         node -e '
@@ -44,7 +46,7 @@ runs:
           require("fs").writeFileSync("report.md", md);
         '
         cat report.md >> "$GITHUB_STEP_SUMMARY"
-        npx -y everthread check "${{ inputs.url }}" ${{ inputs.fail-on != 'none' && format('--fail-on {0}', inputs.fail-on) || '' }} > /dev/null
+        npx -y everthread@latest check "${{ inputs.url }}" ${{ inputs.fail-on != 'none' && format('--fail-on {0}', inputs.fail-on) || '' }} > /dev/null
         exit $?
     - if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' && always() }}
       uses: actions/github-script@v7
